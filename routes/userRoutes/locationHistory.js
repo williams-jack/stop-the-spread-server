@@ -2,8 +2,8 @@
 const express = require("express");
 const router = express.Router();
 // Requires database access
-const mongoose = require("mongoose")
-const User = require("../../models/User")
+const mongoose = require("mongoose");
+const User = require("../../models/User");
 const User = require("../../models/LocationHistoryEntry");
 const LocationHistoryEntry = require("../../models/LocationHistoryEntry");
 
@@ -37,16 +37,16 @@ router.post(
                 timeIn: data.timeIn,
                 timeOut: data.timeOut
             });
-            await newEntry.save();
-            userObj.locationHistory.push(newEntry._id)
-            await userObj.save()
+            // await newEntry.save();
+            userObj.locationHistory.push(newEntry._id);
+            await userObj.save();
         } 
         catch (err) 
         {
-            return res.status(500).send({message: "Unable to create entry", error: err});
+            return res.status(500).json({message: "Unable to create entry", error: err});
         }
 
-        res.status(200).send()
+        res.sendStatus(200);
     })
 );
 
@@ -54,7 +54,7 @@ router.post(
     "/editEntry",
     async((req, res) => {
         // Edit an entry in the user's location history.
-        
+
     })
 );
 
@@ -71,16 +71,16 @@ router.delete(
             // Try to delete the document.
             const entryId = new mongoose.Types.ObjectId(req.body.id);
 
-            userObj.locationHistory.pull({_id: entryId})
-            await userObj.save()
+            userObj.locationHistory.pull({_id: entryId});
+            await userObj.save();
 
             await LocationHistoryEntry.deleteOne({
                 _id: entryId,
             });
         } catch (err) {
-            return res.status(500).send({ message: "Not able to delete entry.", error: err });
+            return res.status(500).json({ message: "Not able to delete entry.", error: err });
         }
     
-        res.status(200).send({ message: "Entry deleted." });
+        res.status(200).json({ message: "Entry deleted." });
     })
 );
