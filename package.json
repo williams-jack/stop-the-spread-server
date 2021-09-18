@@ -1,0 +1,34 @@
+{
+  "name": "stop-the-spread-server",
+  "version": "1.0.0",
+  "description": "Back end server/API for the HackMIT project StopTheSpread.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/williams-jack/stop-the-spread-server.git"
+  },
+  "keywords": [
+    "Server",
+    "express.js",
+    "API",
+    "REST"
+  ],
+  "author": "Jackson Williams, Nicholas Ratliff, Christopher Muniz",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/williams-jack/stop-the-spread-server/issues"
+  },
+  "homepage": "https://github.com/williams-jack/stop-the-spread-server#readme",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "express-session": "^1.17.2",
+    "mongoose": "^6.0.6"
+  }
+}
