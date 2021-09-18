@@ -2,6 +2,8 @@
 const express = require("express");
 const router = express.Router();
 
+// TODO: Add session verification.
+
 // Authentication routes.
 const authRouter = require("./auth");
 router.use(authRouter);
