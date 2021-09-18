@@ -12,6 +12,12 @@ const BusinessSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    // Email associated with the business account.
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+    },
     // Name of the business.
     businessName: {
         type: String,
