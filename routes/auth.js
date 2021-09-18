@@ -45,7 +45,7 @@ router.post("/login", async (req, res) => {
             // If found, check that passwords are the same.
             if (password == businessEntry.password) {
                 req.session.username = username;
-                req.session.role = userEntry.role;
+                req.session.role = businessEntry.role;
                 req.session.save();
                 res.sendStatus(200);
             } else {
@@ -55,7 +55,7 @@ router.post("/login", async (req, res) => {
             }
         } else {
             // No business by that username. Send back bad request.
-            req.status(400).json({
+            res.status(400).json({
                 error: "No Business account with that username.",
             });
         }
@@ -101,6 +101,13 @@ router.post("/register", async (req, res) => {
 
         res.sendStatus(200);
     } else if (role == "Business") {
+        // Make sure business name is included:
+        const businessName = req.body.businessName;
+        if (!businessName) {
+            return res.status(400).json({
+                message: "Must include a business name.",
+            });
+        }
         // Ensure business with that username and email does not already
         // exist.
         const existingBusiness = await Business.findOne({ username }).findOne({
@@ -117,7 +124,15 @@ router.post("/register", async (req, res) => {
             username,
             password,
             email,
+            businessName,
         });
+
+        req.session.username = username;
+        req.session.role = role;
+        req.session.businessName = businessName;
+        req.session.save();
+
+        return res.sendStatus(200);
     } else {
         res.status(400).json({
             error: "Invalid role.",
