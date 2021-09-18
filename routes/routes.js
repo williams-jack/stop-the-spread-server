@@ -13,6 +13,10 @@ const routeAuth = require("../middleware/routeAuth");
 
 // User routes:
 const userRoutesRouter = require("./userRoutes/routes");
-router.use("/user", userRoutesRouter, routeAuth.userRouteAuth);
+router.use("/user", routeAuth.userRouteAuth, userRoutesRouter);
+
+// Business routes
+const businessRoutesRouter = require("./businessRoutes/routes");
+router.use("/business", routeAuth.businessRouteAuth, businessRoutesRouter);
 
 module.exports = router;
