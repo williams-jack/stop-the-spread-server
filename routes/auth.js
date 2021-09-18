@@ -127,7 +127,7 @@ router.post("/register", async (req, res) => {
 
 router.post("/logout", accountLoggedIn, async (req, res) => {
     // Logs the user out. Make sure they have a session that can be destroyed.
-    req.session.destroy();
+    await req.session.destroy();
     res.sendStatus(200);
 });
 
