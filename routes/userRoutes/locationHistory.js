@@ -4,24 +4,24 @@ const router = express.Router();
 // Requires database access
 const mongoose = require("mongoose");
 const User = require("../../models/User");
-const User = require("../../models/LocationHistoryEntry");
 const LocationHistoryEntry = require("../../models/LocationHistoryEntry");
 
 router.get(
     "/entries",
-    async((req, res) => {
+    (async(req, res) => {
         // Return list of user's location entries.
         const currentUser = req.session.username;
         const entries = await User.findOne(
             {username : currentUser}
         ).select("locationHistory");
+        //console.log(`entries: ${entries}`)
         res.status(200).send(entries);
     })
 );
 
 router.post(
     "/addEntry",
-    async((req, res) => {
+    (async(req, res) => {
         // Add an entry to the user's location history.
         const data = req.body;
         const currentUser = req.session.username;
@@ -52,7 +52,7 @@ router.post(
 
 router.post(
     "/editEntry",
-    async((req, res) => {
+    (async(req, res) => {
         // Edit an entry in the user's location history.
 
     })
@@ -60,7 +60,7 @@ router.post(
 
 router.delete(
     "/deleteEntry",
-    async((req, res) => {
+    (async(req, res) => {
         // Delete an entry in the user's location history.
         const currentUser = req.session.username;
         const userObj = await User.findOne(
@@ -84,3 +84,5 @@ router.delete(
         res.status(200).json({ message: "Entry deleted." });
     })
 );
+
+module.exports = router
