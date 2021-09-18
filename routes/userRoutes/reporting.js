@@ -14,3 +14,5 @@ const notifyCloseContacts = (locationInformtaion) => {
     // who were at the location within that time frame and send them an email
     // informting them they have been in close contact with someone who tested positive.
 };
+
+module.exports = router;

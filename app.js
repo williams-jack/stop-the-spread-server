@@ -38,6 +38,15 @@ app.use(
         }),
     })
 );
+app.use(express.json());
+
+// Mount custom middleware.
+const mainRouter = require("./routes/routes");
+app.use(mainRouter);
+
+app.get("/", (req, res) => {
+    res.sendStatus(200);
+});
 
 // Start application.
 app.listen(PORT, () => {

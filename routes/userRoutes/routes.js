@@ -9,3 +9,5 @@ router.use(reportingRouter);
 // User locationHistory route.
 const locationHistory = require("./locationHistory");
 router.use("/locationHistory", locationHistory);
+
+module.exports = router;

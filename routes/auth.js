@@ -18,10 +18,10 @@ router.post("/login", async (req, res) => {
         if (userEntry) {
             // If found, check that passwords are the same.
             if (userEntry.password == password) {
-                res.sendStatus(200);
                 req.session.username = username;
                 req.session.role = userEntry.role;
                 req.session.save();
+                res.sendStatus(200);
             } else {
                 res.status(400).json({
                     error: "The password was incorrect.",
@@ -38,10 +38,10 @@ router.post("/login", async (req, res) => {
         if (businessEntry) {
             // If found, check that passwords are the same.
             if (password == businessEntry.password) {
-                res.sendStatus(200);
                 req.session.username = username;
                 req.session.role = userEntry.role;
                 req.session.save();
+                res.sendStatus(200);
             } else {
                 res.status(400).json({
                     error: "The password was incorrect.",
@@ -73,3 +73,5 @@ router.post("/logout", async (req, res) => {
         });
     }
 });
+
+module.exports = router;
