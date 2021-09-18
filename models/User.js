@@ -20,7 +20,7 @@ const UserSchema = new mongoose.Schema({
     },
     // Is the user actively positive?
     activePositive: {
-        type: boolean,
+        type: Boolean,
         required: true,
         default: false,
     },
