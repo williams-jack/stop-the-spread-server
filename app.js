@@ -46,6 +46,7 @@ app.use(mainRouter);
 
 app.get("/", (req, res) => {
     res.sendStatus(200);
+    console.log("this is after the response is sent");
 });
 
 // Start application.
