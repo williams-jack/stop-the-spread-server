@@ -3,6 +3,7 @@ const express = require("express");
 const User = require("../../models/User");
 const router = express.Router();
 const sgMail = require('@sendgrid/mail');
+const LocationHistoryEntry = require("../../models/LocationHistoryEntry");
 
 router.post("/reportPositive", async (req, res) => {
     // User marks themselves as actively positive. Marked as inactive after [CDC Guideline]
@@ -15,21 +16,27 @@ router.post("/reportPositive", async (req, res) => {
         {username : currentUser}
     );
 
-    const query = { username : currentUser };
-    const positiveStatus = { $set: {activePositive: true} };
-    await userObj.updateOne(query, positiveStatus);
+    userObj.set({
+        activePositive: true,
+        datePositive: "2021-09-19T04:21:35.950Z"
+    });
+
     await userObj.save();
 
     res.status(200).send("A user has tested positive for COVID-19.");
     
-    const userLocations = userObj.locationHistory;
+    const userLocationIDs = userObj.locationHistory;
+    let userLocations = [];
 
-    for (let i = 0; i < userLocations.length; i++) {
-        const userLocation = userLocations[i];
+    for (let i = 0; i < userLocationIDs.length; i++) {
+        const userLocationID = userLocationIDs[i];
+        const userLocation = await LocationHistoryEntry.findById(userLocationID);
 
-        if (Date.parse(userLocation.Date) <= (Date.parse(userObj.dateIn) - 12096e5)) {
-            userLocations.remove(userLocation);
-        }
+        // if (Date.parse(userLocation.Date) > (Date.parse(userObj.dateIn) - 12096e5)) {
+        //     userLocations.add(userLocation);
+        // }
+
+        userLocations.push(userLocation);
     }
 
     notifyCloseContacts(userLocations);
@@ -45,35 +52,56 @@ const notifyCloseContacts = async (locationInformation) => {
     const users = await User.find();
     const PositiveLocations = locationInformation;
     for (let i = 0; i < locationInformation.length; i++) {
-        const LocationHistoryEntry = locationInformation[i];
-        const locationFromEntry = LocationHistoryEntry.businessLocation;
+        const LocationHistoryEntryObj = locationInformation[i];
+
+        //console.log(LocationHistoryEntryObj);
+        const locationFromEntry = LocationHistoryEntryObj.businessLocation;
 
         for (let j = 0; j < users.length; j++) {
             const locationUser = users[j];
 
-            if (locationFromEntry in locationUser.locationHistory) {
-                const dateIn = Date.parse(LocationHistoryEntry.timeIn);
+            //console.log(locationUser);
+            let locationUserHistory = locationUser.locationHistory;
+
+            for (let k = 0; k < users.length; k++) {
+                const location = await LocationHistoryEntry.findById(locationUserHistory[k]);
+                locationUserHistory[k] = location.businessLocation;
+            }
+
+            // console.log(locationUserHistory);
+            // console.log(locationFromEntry);
+            if (locationUserHistory.includes(locationFromEntry)) {
+                const dateIn = Date.parse(LocationHistoryEntryObj.timeIn);
                 const datePositive = Date.parse(locationUser.datePositive);
-                const dateOut = Date.parse(LocationHistoryEntry.timeOut);
+                const dateOut = Date.parse(LocationHistoryEntryObj.timeOut);
 
                 if ((datePositive <= dateOut && datePositive >= dateIn) && !(locationUser in usersToNotify)) {
-                        usersToNotify.push(locationUser);
+                    usersToNotify.push(locationUser);
                 }
-            }            
+            }
         }
     }
 
-    for (let i = 0; i < users.length; i++) {
+    for (let i = 0; i < usersToNotify.length; i++) {
         emailUser = usersToNotify[i];
-        sgMail.setApiKey("d-1ddc088bc46549ac9f7a0c8d0c59f240");
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+        console.log(emailUser.email);
+
         const msg = {
             to: [emailUser.email],
             from: 'letsstopthespread@gmail.com',
             subject: '[ACTION REQUIRED] - Possible COVID-19 Exposure',
             text: 'Hello ' + emailUser.username + ', \nSomeone has tested positive for COVID-19 and was at the same location as you. Please get tested ASAP.\n\nSincerely, \nStop The Spread',
-            html: '<p>Hello HTML world!</p>',
+            html: '<p>Hello ' + emailUser.username + ', </p><p>Someone has tested positive for COVID-19 and was at the same location as you. Please get tested ASAP.</p><p>Sincerely, </p><p>The Stop The Spread Team</p>',
         };
-        sgMail.send(msg);
+
+        sgMail.send(msg).then(res => {
+            //console.log(res.body.errors);
+        }).catch(err => {
+            console.error(err);
+        });
+        
     }
 };
 
