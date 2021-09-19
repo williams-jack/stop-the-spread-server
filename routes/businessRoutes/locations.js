@@ -58,16 +58,34 @@ router.post("/editLocation", async (req, res) => {
     // Edit an entry in the bussiness's locations.
     const data = req.body;
     const currentBusinessUser = req.session.username;
-    const businessObj = await User.findOne(
+    const businessObj = await Business.findOne(
         { username: currentBusinessUser }
     );
 
     try {
         const locationId = new mongoose.Types.ObjectId(req.body.id);
+        // Check that the location exists.
+        if (!await AddressInformation.exists({ _id: locationId })) {
+            return res.status(400).json({
+                message: "Location does not exist",
+            });
+        }
+
+        let location = await AddressInformation.findById(locationId);
+        location.set({
+            addressLineOne: data.addressLineOne,
+            addressLineTwo: data.addressLineTwo,
+            city: data.city,
+            state: data.state,
+            zipCode: data.zipCode
+        });
+        await location.save();
 
     } catch (error) {
         return res.status(500).json({ message: "Not able to update location.", error: err });
     }
+
+    res.status(200).json({ message: "Location updated." });
 });
 
 router.delete("/deleteLocation", async (req, res) => {
@@ -81,7 +99,7 @@ router.delete("/deleteLocation", async (req, res) => {
         // Try to delete the document.
         const locationId = new mongoose.Types.ObjectId(req.body.id);
         // Check that the location exists.
-        if (!await AddressInformation.exists({_id: locationId})) {
+        if (!await AddressInformation.exists({ _id: locationId })) {
             return res.status(400).json({
                 message: "Location does not exist",
             });
