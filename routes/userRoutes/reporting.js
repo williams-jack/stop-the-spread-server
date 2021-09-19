@@ -27,7 +27,7 @@ router.post("/reportPositive", async (req, res) => {
     for (let i = 0; i < userLocations.length; i++) {
         const userLocation = userLocations[i];
 
-        if (userLocation.Date <= userObj.dateIn - 14) {
+        if (Date.parse(userLocation.Date) <= (Date.parse(userObj.dateIn) - 12096e5)) {
             userLocations.remove(userLocation);
         }
     }
@@ -40,7 +40,6 @@ const notifyCloseContacts = async (locationInformation) => {
     // Given and array of LocationHistoryEntries, find all users
     // who were at the location within that time frame and send them an email
     // informing them they have been in close contact with someone who tested positive.
-    // Only locations for the past 14 days
 
     let usersToNotify = [];
     const users = await User.find();
@@ -77,5 +76,3 @@ const notifyCloseContacts = async (locationInformation) => {
         sgMail.send(msg);
     }
 };
-
-
