@@ -83,8 +83,8 @@ const notifyCloseContacts = async (locationInformation, datePositive) => {
             to: [emailUser.email],
             from: 'letsstopthespread@gmail.com',
             subject: '[ACTION REQUIRED] - Possible COVID-19 Exposure',
-            text: 'Hello ' + emailUser.username + ', \nSomeone has tested positive for COVID-19 and was at the same location as you. Please get tested ASAP.\n\nSincerely, \nStop The Spread',
-            html: '<p>Hello ' + emailUser.username + ', </p><p>Someone has tested positive for COVID-19 and was at the same location as you. Please get tested ASAP.</p><p>Sincerely, </p><p>The Stop The Spread Team</p>',
+            text: 'Hello ' + emailUser.username + ', \nSomeone has tested positive for COVID-19 and was at the same location as you in the past 14 days. Please get tested ASAP.\n\nSincerely, \nStop The Spread',
+            html: '<p>Hello ' + emailUser.username + ', </p><p>Someone has tested positive for COVID-19 and was at the same location as you in the past 14 days. Please get tested ASAP.</p><p>Sincerely, </p><p>The Stop The Spread Team</p>',
         };
 
         sgMail.send(msg).then(res => {
