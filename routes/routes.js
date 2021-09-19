@@ -13,6 +13,10 @@ const routeAuth = require("../middleware/routeAuth");
 
 // User routes:
 const userRoutesRouter = require("./userRoutes/routes");
+
+// Business routes
+const businessRoutesRouter = require("./businessRoutes/routes");
+router.use("/business", routeAuth.businessRouteAuth, businessRoutesRouter);
 router.use(
     "/user",
     userRoutesRouter,
