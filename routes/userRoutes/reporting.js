@@ -23,34 +23,49 @@ router.post("/reportPositive", async (req, res) => {
     res.status(200).send("A user has tested positive for COVID-19.");
     
     const userLocations = userObj.locationHistory;
+
+    for (let i = 0; i < userLocations.length; i++) {
+        const userLocation = userLocations[i];
+
+        if (userLocation.Date <= userObj.dateIn - 14) {
+            userLocations.remove(userLocation);
+        }
+    }
+
     notifyCloseContacts(userLocations);
 
 });
 
-const notifyCloseContacts = (locationInformation) => {
+const notifyCloseContacts = async (locationInformation) => {
     // Given and array of LocationHistoryEntries, find all users
     // who were at the location within that time frame and send them an email
     // informing them they have been in close contact with someone who tested positive.
     // Only locations for the past 14 days
 
-    let users = [];
+    let usersToNotify = [];
+    const users = await User.find();
     const PositiveLocations = locationInformation;
     for (let i = 0; i < locationInformation.length; i++) {
         const LocationHistoryEntry = locationInformation[i];
+        const locationFromEntry = LocationHistoryEntry.businessLocation;
 
-        const locationUser = LocationHistoryEntry.user;
+        for (let j = 0; j < users.length; j++) {
+            const locationUser = users[j];
 
-        const dateIn = Date.parse(LocationHistoryEntry.timeIn);
-        const datePositive = Date.parse(locationUser.datePositive);
-        const dateOut = Date.parse(LocationHistoryEntry.timeOut);
+            if (locationFromEntry in locationUser.locationHistory) {
+                const dateIn = Date.parse(LocationHistoryEntry.timeIn);
+                const datePositive = Date.parse(locationUser.datePositive);
+                const dateOut = Date.parse(LocationHistoryEntry.timeOut);
 
-        if ((datePositive <= dateOut && datePositive >= dateIn) && !(locationUser in users)) {
-                users.push(locationUser);
+                if ((datePositive <= dateOut && datePositive >= dateIn) && !(locationUser in usersToNotify)) {
+                        usersToNotify.push(locationUser);
+                }
+            }            
         }
     }
 
     for (let i = 0; i < users.length; i++) {
-        emailUser = user[i];
+        emailUser = usersToNotify[i];
         sgMail.setApiKey("d-1ddc088bc46549ac9f7a0c8d0c59f240");
         const msg = {
             to: [emailUser.email],
