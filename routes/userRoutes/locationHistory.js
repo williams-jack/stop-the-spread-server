@@ -5,132 +5,130 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const User = require("../../models/User");
 const LocationHistoryEntry = require("../../models/LocationHistoryEntry");
+const AddressInformation = require("../../models/AddressInformation");
 
-router.get(
-    "/entries",
-    (async (req, res) => {
-        // Return list of user's location entries.
-        const currentUser = req.session.username;
-        const userObj = await User.findOne(
-            { username: currentUser }
+router.get("/entries", async (req, res) => {
+    // Return list of user's location entries.
+    const currentUser = req.session.username;
+    const userObj = await User.findOne({ username: currentUser });
+
+    let entries = [];
+    for (let i = 0; i < userObj.locationHistory.length; i++) {
+        console.log(userObj);
+        const entry = await LocationHistoryEntry.findById(
+            userObj.locationHistory[i]
         );
-
-        let entries = [];
-        for (let i = 0; i < userObj.locationHistory.length; i++) {
-            entries.push(await LocationHistoryEntry.findById(userObj.locationHistory[i]));
-        }
-
-        res.status(200).send(entries);
-    })
-);
-
-router.post(
-    "/addEntry",
-    (async (req, res) => {
-        // Add an entry to the user's location history.
-        const data = req.body;
-        const currentUser = req.session.username;
-        const userObj = await User.findOne(
-            { username: currentUser }
+        console.log(entry);
+        const address = await AddressInformation.findById(
+            entry.businessLocation
         );
+        console.log(address);
+        const shippedEntry = entry.toObject();
+        shippedEntry.businessLocation = address;
+        entries.push(shippedEntry);
+    }
 
-        try {
-            // Check that the entry doesn't already exist.
-            if (await LocationHistoryEntry.exists({
+    res.status(200).send(entries);
+});
+
+router.post("/addEntry", async (req, res) => {
+    // Add an entry to the user's location history.
+    const data = req.body;
+    const currentUser = req.session.username;
+    const userObj = await User.findOne({ username: currentUser });
+
+    try {
+        // Check that the entry doesn't already exist.
+        if (
+            await LocationHistoryEntry.exists({
                 user: userObj._id,
                 businessLocation: data.businessLocation,
                 timeIn: data.timeIn,
-                timeOut: data.timeOut
-            })) {
-                return res.status(400).json({
-                    message: "Entry already exists",
-                });
-            }
-
-            const newEntry = await LocationHistoryEntry.create({
-                user: userObj._id,
-                businessLocation: data.businessLocation,
-                timeIn: data.timeIn,
-                timeOut: data.timeOut
+                timeOut: data.timeOut,
+            })
+        ) {
+            return res.status(400).json({
+                message: "Entry already exists",
             });
-            userObj.locationHistory.push(newEntry._id);
-            await userObj.save();
-        }
-        catch (err) {
-            return res.status(500).json({ message: "Unable to create entry", error: err });
         }
 
-        res.sendStatus(200);
-    })
-);
+        const newEntry = await LocationHistoryEntry.create({
+            user: userObj._id,
+            businessLocation: data.businessLocation,
+            timeIn: data.timeIn,
+            timeOut: data.timeOut,
+        });
+        userObj.locationHistory.push(newEntry._id);
+        await userObj.save();
+    } catch (err) {
+        return res
+            .status(500)
+            .json({ message: "Unable to create entry", error: err });
+    }
 
-router.post(
-    "/editEntry",
-    (async (req, res) => {
-        // Edit an entry in the user's location history.
-        const data = req.body;
-        const currentUser = req.session.username;
-        const userObj = await User.findOne(
-            { username: currentUser }
-        );
+    res.sendStatus(200);
+});
 
-        try {
-            const entryId = new mongoose.Types.ObjectId(req.body.id);
-            // Check that the location exists.
-            if (!await LocationHistoryEntry.exists({ _id: entryId })) {
-                return res.status(400).json({
-                    message: "Location does not exist",
-                });
-            }
+router.post("/editEntry", async (req, res) => {
+    // Edit an entry in the user's location history.
+    const data = req.body;
+    const currentUser = req.session.username;
+    const userObj = await User.findOne({ username: currentUser });
 
-            let entry = await LocationHistoryEntry.findById(entryId);
-            entry.set({
-                user: userObj._id,
-                businessLocation: data.businessLocation,
-                timeIn: data.timeIn,
-                timeOut: data.timeOut
+    try {
+        const entryId = new mongoose.Types.ObjectId(req.body.id);
+        // Check that the location exists.
+        if (!(await LocationHistoryEntry.exists({ _id: entryId }))) {
+            return res.status(400).json({
+                message: "Location does not exist",
             });
-            await entry.save();
-
-        } catch (error) {
-            return res.status(500).json({ message: "Not able to update entry.", error: err });
         }
 
-        res.status(200).json({ message: "Location updated." });
-    })
-);
+        let entry = await LocationHistoryEntry.findById(entryId);
+        entry.set({
+            user: userObj._id,
+            businessLocation: data.businessLocation,
+            timeIn: data.timeIn,
+            timeOut: data.timeOut,
+        });
+        await entry.save();
+    } catch (error) {
+        return res
+            .status(500)
+            .json({ message: "Not able to update entry.", error: err });
+    }
 
-router.delete(
-    "/deleteEntry",
-    (async (req, res) => {
-        // Delete an entry in the user's location history.
-        const currentUser = req.session.username;
-        const userObj = await User.findOne(
-            { username: currentUser }
-        );
+    res.status(200).json({ message: "Location updated." });
+});
 
-        try {
-            // Try to delete the document.
-            const entryId = new mongoose.Types.ObjectId(req.body.id);
-            // Check that the location exists.
-            if (!await LocationHistoryEntry.exists({ _id: entryId })) {
-                return res.status(400).json({
-                    message: "Entry does not exist",
-                });
-            }
+router.delete("/deleteEntry", async (req, res) => {
+    // Delete an entry in the user's location history.
+    const currentUser = req.session.username;
+    const userObj = await User.findOne({ username: currentUser });
 
-            userObj.locationHistory.pull({ _id: entryId });
-            await userObj.save();
-
-            await LocationHistoryEntry.deleteOne({
-                _id: entryId,
+    try {
+        // Try to delete the document.
+        const entryId = new mongoose.Types.ObjectId(req.body.id);
+        // Check that the location exists.
+        if (!(await LocationHistoryEntry.exists({ _id: entryId }))) {
+            return res.status(400).json({
+                message: "Entry does not exist",
             });
-        } catch (err) {
-            return res.status(500).json({ message: "Not able to delete entry.", error: err });
         }
 
-        res.status(200).json({ message: "Entry deleted." });
-    })
-);
+        userObj.locationHistory.pull({ _id: entryId });
+        await userObj.save();
 
-module.exports = router
+        await LocationHistoryEntry.deleteOne({
+            _id: entryId,
+        });
+    } catch (err) {
+        return res
+            .status(500)
+            .json({ message: "Not able to delete entry.", error: err });
+    }
+
+    res.status(200).json({ message: "Entry deleted." });
+});
+
+module.exports = router;

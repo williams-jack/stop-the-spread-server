@@ -10,4 +10,8 @@ router.use(reportingRouter);
 const locationHistory = require("./locationHistory");
 router.use("/locationHistory", locationHistory);
 
+// User routes for getting business info.
+const businessInfoRouter = require("./businessLocations");
+router.use("/businessInfo", businessInfoRouter);
+
 module.exports = router;

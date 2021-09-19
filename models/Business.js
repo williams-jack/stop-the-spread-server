@@ -23,6 +23,7 @@ const BusinessSchema = new mongoose.Schema(
         businessName: {
             type: String,
             required: true,
+            unique: true,
         },
         // Locations of the business (i.e, franchises).
         // Array of AddressInformation.

@@ -11,7 +11,7 @@ db.then(() => {
 });
 
 // Application creation/setup.
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 const app = express();
 
 // Mount package middleware.
@@ -20,7 +20,14 @@ const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const MongoStore = require("connect-mongo");
 
-app.use(cors());
+app.use(
+    cors({
+        origin: "http://localhost:3000",
+        optionsSuccessStatus: 200,
+        allowedHeaders: ["Content-Type", "Authorization"],
+        credentials: true,
+    })
+);
 app.use(cookieParser());
 app.use(
     session({
