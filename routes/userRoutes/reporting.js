@@ -93,6 +93,9 @@ const notifyCloseContacts = async (locationInformation, datePositive) => {
             console.error(err);
         });
         
+        emailUser.notifications.push({message: msg.text});
+        await emailUser.save();
+
     }
 };
 

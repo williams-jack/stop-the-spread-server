@@ -12,6 +12,6 @@ router.use("/locationHistory", locationHistory);
 
 // User notification route.
 const userNotifications = require("./notifications");
-router.user("/notifications", userNotifications);
+router.use("/notifications", userNotifications);
 
 module.exports = router;
