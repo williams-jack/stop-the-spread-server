@@ -9,9 +9,15 @@ const AddressInformation = require("../../models/AddressInformation");
 router.get("/getLocations", async (req, res) => {
     // Return list of bussiness's locations.
     const currentBusinessUser = req.session.username;
-    const locations = await Business.findOne(
+    const businessObj = await Business.findOne(
         { username: currentBusinessUser }
-    ).select("locations");
+    );
+
+    let locations = [];
+    for (let i = 0; i < businessObj.locations.length; i++) {
+        locations.push(await AddressInformation.findById(businessObj.locations[i]));
+    }
+
     res.status(200).send(locations);
 });
 
@@ -57,11 +63,6 @@ router.post("/addLocation", async (req, res) => {
 router.post("/editLocation", async (req, res) => {
     // Edit an entry in the bussiness's locations.
     const data = req.body;
-    const currentBusinessUser = req.session.username;
-    const businessObj = await Business.findOne(
-        { username: currentBusinessUser }
-    );
-
     try {
         const locationId = new mongoose.Types.ObjectId(req.body.id);
         // Check that the location exists.
