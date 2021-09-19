@@ -4,6 +4,7 @@ const User = require("../../models/User");
 const router = express.Router();
 const sgMail = require('@sendgrid/mail');
 const LocationHistoryEntry = require("../../models/LocationHistoryEntry");
+const Business = require("../../models/Business");
 
 router.post("/reportPositive", async (req, res) => {
     // User marks themselves as actively positive. Marked as inactive after [CDC Guideline]
@@ -24,17 +25,22 @@ router.post("/reportPositive", async (req, res) => {
     await userObj.save();
 
     res.status(200).send("A user has tested positive for COVID-19.");
-    
+
     const userLocationIDs = userObj.locationHistory;
     let userLocations = [];
-
+    
     for (let i = 0; i < userLocationIDs.length; i++) {
         const userLocationID = userLocationIDs[i];
-        const userLocation = await LocationHistoryEntry.findById(userLocationID);
 
-        if (Date.parse(userLocation.timeOut) > (Date.parse(userObj.datePositive) - 12096e5)) {
-            userLocations.push(userLocation);
+        try {
+            const userLocation = await LocationHistoryEntry.findById(userLocationID);
+            if (Date.parse(userLocation.timeOut) > (Date.parse(userObj.datePositive) - 12096e5)) {
+                userLocations.push(userLocation);
+            }
+        } catch (error) {
+            console.log("Given ID Does not Exist");
         }
+        
     }
 
     notifyCloseContacts(userLocations, userObj.datePositive);
@@ -59,8 +65,12 @@ const notifyCloseContacts = async (locationInformation, datePositive) => {
             let locationUserHistory = locationUser.locationHistory;
 
             for (let k = 0; k < users.length; k++) {
-                const location = await LocationHistoryEntry.findById(locationUserHistory[k]);
-                locationUserHistory[k] = location.businessLocation;
+                try {
+                    const location = await LocationHistoryEntry.findById(locationUserHistory[k]);
+                    locationUserHistory[k] = location.businessLocation;
+                } catch (error) {
+                    console.log("Given ID Does not Exist");
+                }
             }
 
             if (locationUserHistory.includes(locationFromEntry)) {
