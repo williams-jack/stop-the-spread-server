@@ -1,5 +1,20 @@
 // Data(base) definition for a user's account information, including auth info and COVID details.
 const mongoose = require("mongoose");
+
+const NotificationSchema = new mongoose.Schema(
+    {
+        message: {
+            type: String,
+            required: true
+        },
+        dateSent: {
+            type: Date,
+            required: true,
+            default: new Date()
+        }
+    }
+);
+
 const UserSchema = new mongoose.Schema(
     {
         // User's username.
@@ -35,6 +50,12 @@ const UserSchema = new mongoose.Schema(
             required: true,
             default: [],
         },
+        // Notifications the user has recieved
+        notifications: {
+            type: [NotificationSchema],
+            default: [],
+            required: true
+        }
     },
     {
         collection: "users",
