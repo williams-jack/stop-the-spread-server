@@ -18,7 +18,7 @@ router.post("/reportPositive", async (req, res) => {
 
     userObj.set({
         activePositive: true,
-        datePositive: "2021-09-19T04:21:35.950Z"
+        datePositive: new Date()
     });
 
     await userObj.save();
@@ -32,35 +32,30 @@ router.post("/reportPositive", async (req, res) => {
         const userLocationID = userLocationIDs[i];
         const userLocation = await LocationHistoryEntry.findById(userLocationID);
 
-        // if (Date.parse(userLocation.Date) > (Date.parse(userObj.dateIn) - 12096e5)) {
-        //     userLocations.add(userLocation);
-        // }
-
-        userLocations.push(userLocation);
+        if (Date.parse(userLocation.timeOut) > (Date.parse(userObj.datePositive) - 12096e5)) {
+            userLocations.push(userLocation);
+        }
     }
 
-    notifyCloseContacts(userLocations);
+    notifyCloseContacts(userLocations, userObj.datePositive);
 
 });
 
-const notifyCloseContacts = async (locationInformation) => {
-    // Given and array of LocationHistoryEntries, find all users
-    // who were at the location within that time frame and send them an email
-    // informing them they have been in close contact with someone who tested positive.
+const notifyCloseContacts = async (locationInformation, datePositive) => {
+    // Given an array of LocationHistoryEntries and the time of Positive test, find all users
+    // who were at the location within 14 days before that time and send them an email
+    // informing them they may have been in close contact with someone who tested positive.
 
     let usersToNotify = [];
     const users = await User.find();
-    const PositiveLocations = locationInformation;
     for (let i = 0; i < locationInformation.length; i++) {
         const LocationHistoryEntryObj = locationInformation[i];
 
-        //console.log(LocationHistoryEntryObj);
         const locationFromEntry = LocationHistoryEntryObj.businessLocation;
 
         for (let j = 0; j < users.length; j++) {
             const locationUser = users[j];
 
-            //console.log(locationUser);
             let locationUserHistory = locationUser.locationHistory;
 
             for (let k = 0; k < users.length; k++) {
@@ -68,14 +63,12 @@ const notifyCloseContacts = async (locationInformation) => {
                 locationUserHistory[k] = location.businessLocation;
             }
 
-            // console.log(locationUserHistory);
-            // console.log(locationFromEntry);
             if (locationUserHistory.includes(locationFromEntry)) {
                 const dateIn = Date.parse(LocationHistoryEntryObj.timeIn);
-                const datePositive = Date.parse(locationUser.datePositive);
+                const datePositiveTimeStamp = Date.parse(datePositive);
                 const dateOut = Date.parse(LocationHistoryEntryObj.timeOut);
 
-                if ((datePositive <= dateOut && datePositive >= dateIn) && !(locationUser in usersToNotify)) {
+                if ((dateIn > datePositiveTimeStamp - 12096e5 || dateOut > datePositiveTimeStamp - 12096e5) && !(usersToNotify.includes(locationUser))) {
                     usersToNotify.push(locationUser);
                 }
             }
@@ -85,8 +78,6 @@ const notifyCloseContacts = async (locationInformation) => {
     for (let i = 0; i < usersToNotify.length; i++) {
         emailUser = usersToNotify[i];
         sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-        console.log(emailUser.email);
 
         const msg = {
             to: [emailUser.email],
