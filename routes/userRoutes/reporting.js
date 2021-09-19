@@ -76,3 +76,5 @@ const notifyCloseContacts = async (locationInformation) => {
         sgMail.send(msg);
     }
 };
+
+module.exports = router;
