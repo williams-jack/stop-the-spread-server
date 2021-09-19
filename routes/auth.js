@@ -5,6 +5,7 @@ const { accountLoggedIn } = require("../middleware/routeAuth");
 const Business = require("../models/Business");
 const router = express.Router();
 const User = require("../models/User");
+const bcrypt = require("bcrypt");
 
 router.post("/login", async (req, res) => {
     // Check that username and password are in the JSON
@@ -23,11 +24,14 @@ router.post("/login", async (req, res) => {
         const userEntry = await User.findOne({ username });
         if (userEntry) {
             // If found, check that passwords are the same.
-            if (userEntry.password == password) {
+            if (bcrypt.compare(password, userEntry.password)) {
                 req.session.username = username;
                 req.session.role = role;
                 req.session.save();
-                res.sendStatus(200);
+                res.status(200).json({
+                    username,
+                    role,
+                });
             } else {
                 res.status(400).json({
                     error: "The password was incorrect.",
@@ -43,11 +47,14 @@ router.post("/login", async (req, res) => {
         const businessEntry = await Business.findOne({ username });
         if (businessEntry) {
             // If found, check that passwords are the same.
-            if (password == businessEntry.password) {
+            if (bcrypt.compare(password, businessEntry.password)) {
                 req.session.username = username;
                 req.session.role = role;
                 req.session.save();
-                res.sendStatus(200);
+                res.status(200).json({
+                    username,
+                    role,
+                });
             } else {
                 res.status(400).json({
                     error: "The password was incorrect.",
@@ -94,12 +101,31 @@ router.post("/register", async (req, res) => {
             email,
         });
 
+        // Hash the password before saving it to the database.
+        const saltRounds = 10;
+        bcrypt
+            .genSalt(saltRounds)
+            .then((salt) => {
+                return bcrypt.hash(password, salt);
+            })
+            .then((hash) => {
+                newUser.password = hash;
+            })
+            .catch((err) => {
+                console.error(err);
+            });
+
+        await newUser.save();
+
         // Save user info to session.
         req.session.username = username;
         req.session.role = role;
         req.session.save();
 
-        res.sendStatus(200);
+        res.status(200).json({
+            username,
+            role,
+        });
     } else if (role == "Business") {
         // Make sure business name is included:
         const businessName = req.body.businessName;
@@ -127,12 +153,31 @@ router.post("/register", async (req, res) => {
             businessName,
         });
 
+        // Hash the password before saving it to the database.
+        const saltRounds = 10;
+        bcrypt
+            .genSalt(saltRounds)
+            .then((salt) => {
+                return bcrypt.hash(password, salt);
+            })
+            .then((hash) => {
+                newBusiness.password = hash;
+            })
+            .catch((err) => {
+                console.error(err);
+            });
+
+        await newBusiness.save();
+
         req.session.username = username;
         req.session.role = role;
         req.session.businessName = businessName;
         req.session.save();
 
-        return res.sendStatus(200);
+        return res.status(200).json({
+            username,
+            role,
+        });
     } else {
         res.status(400).json({
             error: "Invalid role.",
