@@ -10,4 +10,8 @@ router.use("/reporting", reportingRouter);
 const locationHistory = require("./locationHistory");
 router.use("/locationHistory", locationHistory);
 
+// User notification route.
+const userNotifications = require("./notifications");
+router.user("/notifications", userNotifications);
+
 module.exports = router;

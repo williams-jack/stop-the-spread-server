@@ -35,9 +35,29 @@ const UserSchema = new mongoose.Schema(
             required: true,
             default: [],
         },
+        // Notifications the user has recieved
+        notifications: {
+            type: [NotificationSchema],
+            default: [],
+            required: true
+        }
     },
     {
         collection: "users",
+    }
+);
+
+const NotificationSchema = new mongoose.Schema(
+    {
+        message: {
+            type: String,
+            required: true
+        },
+        dateSent: {
+            type: Date,
+            required: true,
+            default: new Date()
+        }
     }
 );
 
