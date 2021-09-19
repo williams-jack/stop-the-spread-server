@@ -25,7 +25,7 @@ router.post("/login", async (req, res) => {
             // If found, check that passwords are the same.
             if (userEntry.password == password) {
                 req.session.username = username;
-                req.session.role = userEntry.role;
+                req.session.role = role;
                 req.session.save();
                 res.sendStatus(200);
             } else {
@@ -45,7 +45,7 @@ router.post("/login", async (req, res) => {
             // If found, check that passwords are the same.
             if (password == businessEntry.password) {
                 req.session.username = username;
-                req.session.role = businessEntry.role;
+                req.session.role = role;
                 req.session.save();
                 res.sendStatus(200);
             } else {
